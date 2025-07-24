@@ -7,6 +7,19 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, role = 'USER' } = req.body;
 
+    // Validaciones básicas
+    if (!name || !email || !password) {
+      return res.status(400).json({ 
+        message: 'Todos los campos son requeridos (name, email, password)' 
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        message: 'La contraseña debe tener al menos 6 caracteres' 
+      });
+    }
+
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
       where: { email }
@@ -59,6 +72,13 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Validaciones básicas
+    if (!email || !password) {
+      return res.status(400).json({ 
+        message: 'Email y contraseña son requeridos' 
+      });
+    }
 
     // Buscar usuario
     const user = await prisma.user.findUnique({

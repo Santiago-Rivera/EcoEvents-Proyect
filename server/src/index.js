@@ -14,10 +14,13 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:3000'], // Vite en diferentes puertos y Create React App
-  credentials: true
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:3000'], // Vite en diferentes puertos
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Ruta de prueba
 app.get('/', (req, res) => {
@@ -41,11 +44,15 @@ async function startServer() {
   try {
     // Probar conexión a la base de datos
     await prisma.$connect();
-    console.log('🟢 Conexión a PostgreSQL establecida con Prisma.');
+    console.log('🟢 Conexión a SQLite establecida con Prisma.');
     
     app.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
       console.log(`🌐 Frontend en http://localhost:5173`);
+      console.log(`📊 API endpoints disponibles:`);
+      console.log(`   - POST http://localhost:${PORT}/api/auth/register`);
+      console.log(`   - POST http://localhost:${PORT}/api/auth/login`);
+      console.log(`   - GET  http://localhost:${PORT}/api/auth/profile`);
     });
   } catch (error) {
     console.error('🔴 Error al conectar a la base de datos:', error);

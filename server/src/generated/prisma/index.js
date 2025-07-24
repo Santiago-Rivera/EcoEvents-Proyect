@@ -150,7 +150,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\The Tribal Chief\\Downloads\\EcoEvents-Proyect\\server\\src\\generated\\prisma",
+      "value": "c:\\Users\\The Tribal Chief\\Downloads\\EcoEvents-Proyect\\server\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -164,7 +164,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\The Tribal Chief\\Downloads\\EcoEvents-Proyect\\server\\src\\prisma\\schema.prisma",
+    "sourceFilePath": "c:\\Users\\The Tribal Chief\\Downloads\\EcoEvents-Proyect\\server\\src\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
