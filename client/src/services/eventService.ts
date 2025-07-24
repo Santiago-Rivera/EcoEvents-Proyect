@@ -1,5 +1,8 @@
 // Base URL del API
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'http://localhost:4001/api';
+
+// Importar mock para desarrollo
+import { mockApiCall } from './mockEventService';
 
 // Interfaz para el tipo Evento (actualizada para PostgreSQL)
 export interface Evento {
@@ -66,18 +69,37 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     console.log('Haciendo petición a:', url);
     console.log('Con configuración:', config);
 
-    const response = await fetch(url, config);
-    console.log('Respuesta recibida:', response.status, response.statusText);
-    
-    const data = await response.json();
-    console.log('Datos de la respuesta:', data);
+    try {
+        const response = await fetch(url, config);
+        console.log('Respuesta recibida:', response.status, response.statusText);
+        
+        // Verificar si la respuesta es HTML (indica que el servidor no está corriendo)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+            console.warn('⚠️ Servidor no disponible, usando modo mock...');
+            return await mockApiCall(endpoint, options);
+        }
+        
+        const data = await response.json();
+        console.log('Datos de la respuesta:', data);
 
-    if (!response.ok) {
-        console.error('Error en la respuesta:', response.status, data);
-        throw new Error(data.message || 'Error en la solicitud');
+        if (!response.ok) {
+            console.error('Error en la respuesta:', response.status, data);
+            throw new Error(data.message || 'Error en la solicitud');
+        }
+
+        return data;
+    } catch (error) {
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+            console.warn('⚠️ No se puede conectar al servidor, usando modo mock...');
+            return await mockApiCall(endpoint, options);
+        }
+        if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+            console.warn('⚠️ Servidor devolviendo HTML, usando modo mock...');
+            return await mockApiCall(endpoint, options);
+        }
+        throw error;
     }
-
-    return data;
 };
 
 // Función para obtener todos los eventos

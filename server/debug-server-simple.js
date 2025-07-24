@@ -1,11 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { config } from 'dotenv';
-
-// Configurar variables de entorno
-config();
+const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 // Inicializar app
 const app = express();
@@ -23,6 +20,47 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ message: 'Servidor de debug funcionando' });
 });
+
+// Middleware para verificar token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token de acceso requerido' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token inválido' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Simulador de base de datos en memoria para eventos
+let eventos = [
+  {
+    id: 1,
+    title: "Limpieza de Playa Sostenible",
+    description: "Evento de limpieza comunitaria en la playa con enfoque en sostenibilidad",
+    date: "2025-08-15T10:00:00.000Z",
+    location: "Playa Central, Ciudad de México",
+    maxParticipants: 50,
+    createdBy: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    creator: {
+      id: 1,
+      name: "Usuario Demo",
+      email: "demo@example.com"
+    },
+    _count: {
+      registrations: 15
+    }
+  }
+];
 
 // Endpoint de registro simplificado (sin Prisma)
 app.post('/api/auth/register', async (req, res) => {
@@ -129,47 +167,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Middleware para verificar token
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Token de acceso requerido' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Token inválido' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
-// Simulador de base de datos en memoria para eventos
-let eventos = [
-  {
-    id: 1,
-    title: "Limpieza de Playa Sostenible",
-    description: "Evento de limpieza comunitaria en la playa con enfoque en sostenibilidad",
-    date: "2025-08-15T10:00:00.000Z",
-    location: "Playa Central, Ciudad de México",
-    maxParticipants: 50,
-    createdBy: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    creator: {
-      id: 1,
-      name: "Usuario Demo",
-      email: "demo@example.com"
-    },
-    _count: {
-      registrations: 15
-    }
-  }
-];
-
 // GET /api/eventos - Obtener todos los eventos
 app.get('/api/eventos', (req, res) => {
   console.log('📄 Obteniendo todos los eventos...');
@@ -241,7 +238,7 @@ app.post('/api/eventos', authenticateToken, (req, res) => {
   }
 });
 
-const PORT = 4001; // Puerto diferente para evitar conflictos
+const PORT = 4001;
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor DEBUG corriendo en http://localhost:${PORT}`);
