@@ -7,6 +7,7 @@ const Login = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [showDiagnostic, setShowDiagnostic] = useState<boolean>(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -48,7 +49,9 @@ const Login = () => {
       
       // Opcional: redirigir después de un breve delay
       setTimeout(() => {
-        window.location.href = '/dashboard'; // o la ruta que corresponda
+        // Verificar si hay una ruta de retorno, sino ir al dashboard o home
+        const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+        window.location.href = returnUrl || '/eventos'; // Redirigir a eventos en lugar de dashboard
       }, 2000);
       
     } catch (error) {
@@ -74,6 +77,24 @@ const Login = () => {
             <div className="alert-error-login">
               <span className="error-icon">⚠️</span>
               <span>{error}</span>
+              {error.includes('conectar') && (
+                <button 
+                  type="button"
+                  onClick={() => setShowDiagnostic(!showDiagnostic)}
+                  style={{
+                    marginTop: '10px',
+                    padding: '5px 10px',
+                    fontSize: '12px',
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {showDiagnostic ? 'Ocultar' : 'Mostrar'} Diagnóstico
+                </button>
+              )}
             </div>
           )}
           

@@ -60,7 +60,7 @@ const Register = () => {
       
       // Opcional: redirigir después de un breve delay
       setTimeout(() => {
-        window.location.href = '/dashboard'; // o la ruta que corresponda
+        window.location.href = '/eventos'; // Redirigir a la página de eventos después del registro
       }, 2000);
       
     } catch (error) {

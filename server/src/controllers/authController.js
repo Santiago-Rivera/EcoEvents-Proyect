@@ -5,20 +5,25 @@ import prisma from '../config/database.js';
 // Registrar usuario
 export const register = async (req, res) => {
   try {
+    console.log('📝 Registro - Datos recibidos:', req.body);
     const { name, email, password, role = 'USER' } = req.body;
 
     // Validaciones básicas
     if (!name || !email || !password) {
+      console.log('❌ Registro - Validación fallida: campos faltantes');
       return res.status(400).json({ 
         message: 'Todos los campos son requeridos (name, email, password)' 
       });
     }
 
     if (password.length < 6) {
+      console.log('❌ Registro - Validación fallida: contraseña muy corta');
       return res.status(400).json({ 
         message: 'La contraseña debe tener al menos 6 caracteres' 
       });
     }
+
+    console.log('✅ Registro - Validaciones básicas pasadas');
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -26,11 +31,15 @@ export const register = async (req, res) => {
     });
 
     if (existingUser) {
+      console.log('❌ Registro - Usuario ya existe:', email);
       return res.status(400).json({ message: 'El usuario ya existe' });
     }
 
+    console.log('✅ Registro - Usuario no existe, procediendo...');
+
     // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('✅ Registro - Contraseña hasheada');
 
     // Crear usuario
     const user = await prisma.user.create({
@@ -49,12 +58,16 @@ export const register = async (req, res) => {
       }
     });
 
+    console.log('✅ Registro - Usuario creado:', user.email);
+
     // Generar token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    console.log('✅ Registro - Token generado para:', user.email);
 
     res.status(201).json({
       message: 'Usuario registrado exitosamente',
@@ -63,8 +76,12 @@ export const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en registro:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    console.error('❌ Error en registro:', error);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({ 
+      message: 'Error interno del servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

@@ -1,5 +1,5 @@
-// Base URL del API
-const API_BASE_URL = 'http://localhost:4000/api';
+// Base URL del API - usando servidor debug temporalmente
+const API_BASE_URL = 'http://localhost:4001/api';
 
 // Interfaces para autenticación
 export interface LoginCredentials {
@@ -34,7 +34,7 @@ export interface User {
     createdAt: string;
 }
 
-// Función para hacer llamadas a la API
+// Función para hacer llamadas a la API con mejor manejo de errores
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
     const token = localStorage.getItem('token');
@@ -48,14 +48,35 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         ...options,
     };
 
-    const response = await fetch(url, config);
-    const data = await response.json();
+    try {
+        console.log(`🔄 Realizando ${options.method || 'GET'} a ${url}`);
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+            throw new Error(errorMessage);
+        }
 
-    if (!response.ok) {
-        throw new Error(data.message || 'Error en la solicitud');
+        const data = await response.json();
+        console.log('✅ Respuesta exitosa');
+        return data;
+    } catch (error) {
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+            // Error de conectividad
+            const connectivityError = new Error(
+                'No se pudo conectar con el servidor. Verifica que:\n' +
+                '1. El servidor backend esté ejecutándose en http://localhost:4000\n' +
+                '2. No haya problemas de CORS\n' +
+                '3. El firewall no esté bloqueando la conexión'
+            );
+            console.error('❌ Error de conectividad:', connectivityError.message);
+            throw connectivityError;
+        }
+        
+        console.error('❌ Error en API:', error);
+        throw error;
     }
-
-    return data;
 };
 
 // Función para login
@@ -75,6 +96,20 @@ export const register = async (userData: RegisterData): Promise<AuthResponse> =>
     });
     return data;
 };
+
+
+// Función para verificar conectividad con el servidor
+export const checkServerConnection = async (): Promise<boolean> => {
+    try {
+        const response = await fetch(`${API_BASE_URL.replace('/api', '')}`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(5000) // Timeout de 5 segundos
+        });
+        return response.ok || response.status === 404; // 404 es OK si el endpoint base no existe
+    } catch {
+        return false;
+    }
+}
 
 // Función para obtener perfil
 export const getProfile = async (): Promise<User> => {
